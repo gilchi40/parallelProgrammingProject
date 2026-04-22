@@ -145,34 +145,34 @@ int main(int argc, char **argv)
   /* ------------------------------------------------------------------ */
   /* Verification (rank 0 only)                                           */
   /* ------------------------------------------------------------------ */
-  if (world_rank == 0 && false)
+  if (world_rank == 0)
   {
     printf("Parallel wall time (scatter+compute+gather): %.6f s  (N=%d)\n",
            t_end - t_start, N);
+    
+    // int *serial_C = (int *)malloc((size_t)N * N * sizeof(int));
+    // double t_ser = MPI_Wtime();
+    // matmul_serial(full_A, B, serial_C, N);
+    // t_ser = MPI_Wtime() - t_ser;
+    // printf("Serial time: %.6f s\n", t_ser);
 
-    int *serial_C = (int *)malloc((size_t)N * N * sizeof(int));
-    double t_ser = MPI_Wtime();
-    matmul_serial(full_A, B, serial_C, N);
-    t_ser = MPI_Wtime() - t_ser;
-    printf("Serial time: %.6f s\n", t_ser);
+    // int correct = 1;
+    // for (int i = 0; i < N * N; i++)
+    // {
+    //   if (full_C[i] != serial_C[i])
+    //   {
+    //     printf("MISMATCH at element %d: got %d, expected %d\n",
+    //            i, full_C[i], serial_C[i]);
+    //     correct = 0;
+    //     break;
+    //   }
+    // }
+    // printf("%s\n", correct
+    //          ? "Result verified: parallel output matches serial."
+    //          : "ERROR: parallel output does NOT match serial!");
 
-    int correct = 1;
-    for (int i = 0; i < N * N; i++)
-    {
-      if (full_C[i] != serial_C[i])
-      {
-        printf("MISMATCH at element %d: got %d, expected %d\n",
-               i, full_C[i], serial_C[i]);
-        correct = 0;
-        break;
-      }
-    }
-    printf("%s\n", correct
-             ? "Result verified: parallel output matches serial."
-             : "ERROR: parallel output does NOT match serial!");
-
-    /* For an all-ones matrix, every element should equal N */
-    printf("Expected value per element: %d  |  C[0][0] = %d\n", N, full_C[0]);
+    // /* For an all-ones matrix, every element should equal N */
+    // printf("Expected value per element: %d  |  C[0][0] = %d\n", N, full_C[0]);
 
     printf("Top-left 4x4 corner of C:\n");
     for (int i = 0; i < 4 && i < N; i++)
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
-    free(serial_C);
+    // free(serial_C);
     free(full_A);
     free(full_C);
     free(sendcounts_rows);
