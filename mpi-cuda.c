@@ -52,7 +52,9 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  int N = atoi(argv[1]);
+  int exp = atoi(argv[1]);
+  int N = 1 << exp; // total number of elements
+  
   if (N <= 0)
   {
     if (world_rank == 0)
