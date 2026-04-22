@@ -2,6 +2,9 @@
 
 Run instructions:
 
+cd scratch
+module load xl_r spectrum-mpi cuda
+
 nano mpi-cuda.c
 nano mpi-cuda.cu
 nano Makefile
