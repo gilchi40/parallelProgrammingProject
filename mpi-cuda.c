@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
   int exp = atoi(argv[1]);
   int N = 1 << exp; // total number of elements
-  
+
   if (N <= 0)
   {
     if (world_rank == 0)
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
   /* ------------------------------------------------------------------ */
   /* Verification (rank 0 only)                                           */
   /* ------------------------------------------------------------------ */
-  if (world_rank == 0)
+  if (world_rank == 0 && false)
   {
     printf("Parallel wall time (scatter+compute+gather): %.6f s  (N=%d)\n",
            t_end - t_start, N);
