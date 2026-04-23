@@ -30,11 +30,11 @@ sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./matmul-batch.sh
 cat slurm-jobNum.out
 sbatch -N 1 -n 2 -t 30 --partition=el8 --gres=gpu:2 ./matmul-batch.sh
 cat slurm-jobNum.out
-sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./stencil-batch.sh
+sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./matmul-batch.sh
 cat slurm-jobNum.out
-sbatch -N 2 -n 8 -t 30 --partition=el8 --gres=gpu:1 ./stencil-batch.sh
+sbatch -N 2 -n 8 -t 30 --partition=el8 --gres=gpu:1 ./matmul-batch.sh
 cat slurm-jobNum.out
-sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 ./stencil-batch.sh 
+sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 ./matmul-batch.sh 
 cat slurm-jobNum.out
 
 
@@ -44,9 +44,9 @@ sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./matmul-weak.sh
 cat slurm-jobNum.out
 sbatch -N 1 -n 2 -t 30 --partition=el8 --gres=gpu:2 ./matmul-weak.sh
 cat slurm-jobNum.out
-sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./stencil-weak.sh
+sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./matmul-weak.sh
 cat slurm-jobNum.out
-sbatch -N 2 -n 8 -t 30 --partition=el8 --gres=gpu:1 ./stencil-weak.sh
+sbatch -N 2 -n 8 -t 30 --partition=el8 --gres=gpu:1 ./matmul-weak.sh
 cat slurm-jobNum.out
-sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 ./stencil-weak.sh 
+sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 ./matmul-weak.sh 
 cat slurm-jobNum.out
