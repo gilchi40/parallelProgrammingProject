@@ -16,6 +16,22 @@ extern void runCudaLand(int rank, int size,
                         int *A_rows, int *B, int *C_rows,
                         int localRows, int N);
 
+// ONLY WORKS ON POWER9/AiMOS
+#ifndef CLOCKCYCLE_H
+#define CLOCKCYCLE_H
+#include <stdint.h>
+uint64_t clock_now(void)
+{
+  unsigned int tbl, tbu0, tbu1;
+  do {
+    __asm__ __volatile__ ("mftbu %0" : "=r"(tbu0));
+    __asm__ __volatile__ ("mftb %0" : "=r"(tbl));
+    __asm__ __volatile__ ("mftbu %0" : "=r"(tbu1));
+  } while (tbu0 != tbu1);
+  return (((uint64_t)tbu0) << 32) | tbl;
+}
+#endif // CLOCKCYCLE_H
+
 /* Serial matrix multiply for verification (rank-0 only) */
 static void matmul_serial(const int *A, const int *B, int *C, int N)
 {
@@ -119,7 +135,7 @@ int main(int argc, char **argv)
   MPI_Bcast(B, N * N, MPI_INT, 0, MPI_COMM_WORLD);
 
   MPI_Barrier(MPI_COMM_WORLD);
-  double t_start = MPI_Wtime();
+  double t_start = clock_now();
 
   /* Scatter rows of A */
   MPI_Scatterv(full_A,  sendcounts, displs, MPI_INT,
@@ -140,7 +156,7 @@ int main(int argc, char **argv)
               full_C, sendcounts, displs, MPI_INT,
               0, MPI_COMM_WORLD);
 
-  double t_end = MPI_Wtime();
+  double t_end = clock_now();
 
   /* ------------------------------------------------------------------ */
   /* Verification (rank 0 only)                                           */
