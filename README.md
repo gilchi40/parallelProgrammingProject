@@ -8,9 +8,46 @@ module load xl_r spectrum-mpi cuda
 nano mpi-cuda.c
 nano mpi-cuda.cu
 nano Makefile
+
 make mpi-cuda
+
 nano matmul-batch.sh 
+
 chmod 700 matmul-batch.sh
 
-sbatch -N 1 -n 32 -t 8 --partition=el8-rpi --gres=gpu:1 matmul-batch.sh
+sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 matmul-batch.sh
+cat slurm-jobNum.out
+
+
+Testsuit:
+
+Strong:
+
+sbatch -N 1 -n 32 -t 8 --partition=el8 --gres=gpu:1 ./matmul-batch.sh
+cat slurm-jobNum.out
+sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./matmul-batch.sh
+cat slurm-jobNum.out
+sbatch -N 1 -n 2 -t 30 --partition=el8 --gres=gpu:2 ./matmul-batch.sh
+cat slurm-jobNum.out
+sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./stencil-batch.sh
+cat slurm-jobNum.out
+sbatch -N 2 -n 8 -t 30 --partition=el8 --gres=gpu:1 ./stencil-batch.sh
+cat slurm-jobNum.out
+sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 ./stencil-batch.sh 
+cat slurm-jobNum.out
+
+
+Weak:
+
+sbatch -N 1 -n 32 -t 8 --partition=el8 --gres=gpu:1 ./matmul-weak.sh
+cat slurm-jobNum.out
+sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./matmul-weak.sh
+cat slurm-jobNum.out
+sbatch -N 1 -n 2 -t 30 --partition=el8 --gres=gpu:2 ./matmul-weak.sh
+cat slurm-jobNum.out
+sbatch -N 1 -n 4 -t 30 --partition=el8 --gres=gpu:4 ./stencil-weak.sh
+cat slurm-jobNum.out
+sbatch -N 2 -n 8 -t 30 --partition=el8 --gres=gpu:1 ./stencil-weak.sh
+cat slurm-jobNum.out
+sbatch -N 4 -n 16 -t 30 --partition=el8 --gres=gpu:4 ./stencil-weak.sh 
 cat slurm-jobNum.out
