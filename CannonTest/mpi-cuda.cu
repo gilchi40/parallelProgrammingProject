@@ -53,8 +53,9 @@ __global__ void matmul_tiled_accum(const int *A, const int *B, int *C, int block
   }
 
   /* Accumulate — C is NOT reset between Cannon steps */
-  if (row < blockN && col < blockN)
+  if (row < blockN && col < blockN){
     C[row * blockN + col] += sum;
+  }
 }
 
 void runCudaLand(int rank, int size,
@@ -105,11 +106,11 @@ void runCudaLand(int rank, int size,
     cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
     return;
   }
-
   /* Write accumulated C back to host */
   cudaMemcpy(C_block, d_C, bytes, cudaMemcpyDeviceToHost);
 
   cudaFree(d_A);
   cudaFree(d_B);
   cudaFree(d_C);
+
 }
