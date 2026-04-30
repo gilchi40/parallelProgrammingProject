@@ -4,6 +4,24 @@
 #include <string.h>
 #include <math.h>
 
+
+
+typedef unsigned long long ticks;
+
+static __inline__ ticks getticks(void)
+{
+  unsigned int tbl, tbu0, tbu1;
+
+  do
+  {
+    __asm__ __volatile__("mftbu %0" : "=r"(tbu0));
+    __asm__ __volatile__("mftb %0" : "=r"(tbl));
+    __asm__ __volatile__("mftbu %0" : "=r"(tbu1));
+  } while (tbu0 != tbu1);
+
+  return (((unsigned long long)tbu0) << 32) | tbl;
+}
+
 /*
  * Cannon's Algorithm — MPI + CUDA matrix multiply
  *
@@ -18,18 +36,6 @@ extern void runCudaLand(int rank, int size,
                         int *A_block, int *B_block, int *C_block,
                         int blockN, int N);
 
-/* Serial matrix multiply for verification (rank-0 only) */
-static void matmul_serial(const int *A, const int *B, int *C, int N)
-{
-  for (int i = 0; i < N; i++)
-    for (int j = 0; j < N; j++)
-    {
-      long long sum = 0;
-      for (int k = 0; k < N; k++)
-        sum += (long long)A[i * N + k] * B[k * N + j];
-      C[i * N + j] = (int)sum;
-    }
-}
 
 /*
  * Scatter a full N x N matrix (row-major on rank 0) into
@@ -186,19 +192,12 @@ int main(int argc, char **argv)
   /* ------------------------------------------------------------------ */
   /* Rank 0 (in cart_comm): build full A and B (all ones for testing)   */
   /* ------------------------------------------------------------------ */
-  int *full_A = NULL, *full_B = NULL, *full_C = NULL;
+  int *full_C = NULL;
   if (cart_rank == 0)
   {
-    full_A = (int *)malloc((size_t)N * N * sizeof(int));
-    full_B = (int *)malloc((size_t)N * N * sizeof(int));
     full_C = (int *)malloc((size_t)N * N * sizeof(int));
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Scatter blocks of A and B — use cart_comm so rank ordering matches */
-  /* ------------------------------------------------------------------ */
-  // scatter_blocks(full_A, A_block, N, blockN, q, cart_comm);
-  // scatter_blocks(full_B, B_block, N, blockN, q, cart_comm);
   for (int i = 0; i < blockN * blockN; i++)
   {
     A_block[i] = 1;
@@ -206,7 +205,7 @@ int main(int argc, char **argv)
   }
 
   MPI_Barrier(cart_comm);
-  double t_start = MPI_Wtime();
+  ticks t_start = getticks();
 
   /* ------------------------------------------------------------------ */
   /* Cannon's initial skew                                               */
@@ -256,15 +255,14 @@ int main(int argc, char **argv)
   /* ------------------------------------------------------------------ */
   gather_blocks(C_block, full_C, N, blockN, q, cart_comm);
 
-  double t_end = MPI_Wtime();
+  ticks t_end = getticks();
 
   /* ------------------------------------------------------------------ */
   /* Verification on rank 0 (cart rank 0 == world rank 0 after reorder) */
   /* ------------------------------------------------------------------ */
   if (cart_rank == 0)
   {
-    printf("Cannon parallel time: %.6f s  (exp=%d, N=%d, q=%d)\n",
-           t_end - t_start, exp, N, q);
+    printf("Cannon parallel time: %f seconds (N=%d, q=%d)\n", (t_end - t_start) / 1e9, N, q);
 
     printf("Top-left 4x4 corner of C:\n");
     for (int i = 0; i < 4 && i < N; i++)
@@ -274,8 +272,6 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
-    free(full_A);
-    free(full_B);
     free(full_C);
   }
 

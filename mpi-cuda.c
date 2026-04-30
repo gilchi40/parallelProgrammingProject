@@ -16,33 +16,20 @@ extern void runCudaLand(int rank, int size,
                         int *A_rows, int *B, int *C_rows,
                         int localRows, int N);
 
-// ONLY WORKS ON POWER9/AiMOS
-#ifndef CLOCKCYCLE_H
-#define CLOCKCYCLE_H
-#include <stdint.h>
-uint64_t clock_now(void)
+typedef unsigned long long ticks;
+
+static __inline__ ticks getticks(void)
 {
   unsigned int tbl, tbu0, tbu1;
-  do {
-    __asm__ __volatile__ ("mftbu %0" : "=r"(tbu0));
-    __asm__ __volatile__ ("mftb %0" : "=r"(tbl));
-    __asm__ __volatile__ ("mftbu %0" : "=r"(tbu1));
-  } while (tbu0 != tbu1);
-  return (((uint64_t)tbu0) << 32) | tbl;
-}
-#endif // CLOCKCYCLE_H
 
-/* Serial matrix multiply for verification (rank-0 only) */
-static void matmul_serial(const int *A, const int *B, int *C, int N)
-{
-  for (int i = 0; i < N; i++)
-    for (int j = 0; j < N; j++)
-    {
-      long long sum = 0;
-      for (int k = 0; k < N; k++)
-        sum += (long long)A[i * N + k] * B[k * N + j];
-      C[i * N + j] = (int)sum;
-    }
+  do
+  {
+    __asm__ __volatile__("mftbu %0" : "=r"(tbu0));
+    __asm__ __volatile__("mftb %0" : "=r"(tbl));
+    __asm__ __volatile__("mftbu %0" : "=r"(tbu1));
+  } while (tbu0 != tbu1);
+
+  return (((unsigned long long)tbu0) << 32) | tbl;
 }
 
 int main(int argc, char **argv)
@@ -135,7 +122,7 @@ int main(int argc, char **argv)
   MPI_Bcast(B, N * N, MPI_INT, 0, MPI_COMM_WORLD);
 
   MPI_Barrier(MPI_COMM_WORLD);
-  double t_start = clock_now();
+  ticks t_start = getticks();
 
   /* Scatter rows of A */
   MPI_Scatterv(full_A,  sendcounts, displs, MPI_INT,
@@ -156,39 +143,17 @@ int main(int argc, char **argv)
               full_C, sendcounts, displs, MPI_INT,
               0, MPI_COMM_WORLD);
 
-  double t_end = clock_now();
+  ticks t_end = getticks();
 
   /* ------------------------------------------------------------------ */
   /* Verification (rank 0 only)                                           */
   /* ------------------------------------------------------------------ */
   if (world_rank == 0)
   {
-    printf("Parallel wall time (scatter+compute+gather): %.6f s  (N=%d)\n",
-           t_end - t_start, N);
+    printf("Parallel wall time (scatter+compute+gather): %f seconds\n",
+           (t_end - t_start) / 1e9);
     
-    // int *serial_C = (int *)malloc((size_t)N * N * sizeof(int));
-    // double t_ser = MPI_Wtime();
-    // matmul_serial(full_A, B, serial_C, N);
-    // t_ser = MPI_Wtime() - t_ser;
-    // printf("Serial time: %.6f s\n", t_ser);
-
-    // int correct = 1;
-    // for (int i = 0; i < N * N; i++)
-    // {
-    //   if (full_C[i] != serial_C[i])
-    //   {
-    //     printf("MISMATCH at element %d: got %d, expected %d\n",
-    //            i, full_C[i], serial_C[i]);
-    //     correct = 0;
-    //     break;
-    //   }
-    // }
-    // printf("%s\n", correct
-    //          ? "Result verified: parallel output matches serial."
-    //          : "ERROR: parallel output does NOT match serial!");
-
-    // /* For an all-ones matrix, every element should equal N */
-    // printf("Expected value per element: %d  |  C[0][0] = %d\n", N, full_C[0]);
+    
 
     printf("Top-left 4x4 corner of C:\n");
     for (int i = 0; i < 4 && i < N; i++)
